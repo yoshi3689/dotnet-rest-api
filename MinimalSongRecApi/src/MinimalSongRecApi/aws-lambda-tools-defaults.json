@@ -10,7 +10,7 @@
   "function-runtime": "dotnet6",
   "function-memory-size": 256,
   "function-timeout": 30,
-  "function-handler": "SongRecommendationsApi::SongRecommendationsApi.Functions::Get",
+  "function-handler": "MinimalSongRecApi",
   "function-url-enable": true,
   "s3-prefix": "MinimalSongRecApi/",
   "template": "serverless.template"

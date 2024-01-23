@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -9,8 +9,11 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <!-- Generate ready to run images during publishing to improvement cold starts. -->
         <PublishReadyToRun>true</PublishReadyToRun>
-    </PropertyGroup>
+      <UserSecretsId>8b637a1e-18e2-4a7c-abda-1f030791e2a0</UserSecretsId>
+  </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.6.0"/>
+        <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.6.0" />
+        <PackageReference Include="SpotifyAPI.Web" Version="7.0.2" />
+        <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.0.2" />
     </ItemGroup>
 </Project>
