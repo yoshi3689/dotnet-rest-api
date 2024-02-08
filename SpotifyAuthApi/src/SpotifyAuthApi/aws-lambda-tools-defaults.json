@@ -6,12 +6,9 @@
     "All the command line options for the Lambda command can be specified in this file."
   ],
   "profile": "yoshi",
+  "region": "",
   "configuration": "Release",
-  "function-runtime": "dotnet6",
-  "function-memory-size": 256,
-  "function-timeout": 30,
-  "function-handler": "SongRecommendationsApi::SongRecommendationsApi.Functions::Get",
-  "function-url-enable": true,
-  "s3-prefix": "SongRecommendationsApi/",
-  "template": "serverless.template"
+  "s3-prefix": "SpotifyAuthApi/",
+  "template": "serverless.template",
+  "template-parameters": ""
 }
