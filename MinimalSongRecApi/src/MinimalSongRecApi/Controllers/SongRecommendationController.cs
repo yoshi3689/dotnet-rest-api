@@ -2,11 +2,44 @@ using Microsoft.AspNetCore.Mvc;
 using MinimalSongRecApi.Services;
 using MinimalSongRecApi.Utilities;
 using SpotifyAPI.Web;
+using System.Web;
 
 namespace MinimalSongRecApi.Controllers;
 
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Text.Json;
+
+public static class MvcConfiguration
+{
+    public static IMvcBuilder AddCustomJson(this IMvcBuilder builder)
+    {
+        builder.Services.Configure<MvcOptions>(options =>
+        {
+            var formatter = options.OutputFormatters.OfType<SystemTextJsonOutputFormatter>().FirstOrDefault();
+
+            if (formatter != null)
+            {
+                options.OutputFormatters.Remove(formatter);
+            }
+
+            formatter = new SystemTextJsonOutputFormatter(new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                // Add any other JsonSerializerSettings as needed
+            });
+
+            options.OutputFormatters.Insert(0, formatter);
+        });
+
+        return builder;
+    }
+}
+
+
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class SongRecommendationController : ControllerBase
 {
     private readonly ILogger<SongRecommendationController> _logger;
@@ -102,12 +135,15 @@ public class SongRecommendationController : ControllerBase
     {
         try
         {
+            // HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
             _logger.LogInformation(parameters.ToString());
-            return Ok(await _spotify.GetSongRecommendations(parameters));
+            var res = await _spotify.GetSongRecommendations(parameters);
+            return Ok(res);
         }
         catch (HttpRequestException httpException)
         {
             // Handle HTTP request error
+            // HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
             Console.WriteLine($"HTTP request error: {httpException.Message}");
             return BadRequest($"HTTP request error: {httpException.Message}");
         }

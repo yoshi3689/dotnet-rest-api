@@ -5,13 +5,6 @@ using JsonException = System.Text.Json.JsonException;
 
 namespace MinimalSongRecApi.Utilities;
 
-// using static HttpClient client = new();
-// client.DefaultRequestHeaders.Accept.Clear();
-// client.DefaultRequestHeaders.Accept.Add(
-//     new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-// client.DefaultRequestHeaders.Add("User-Agent", ".NET Foundation Repository Reporter");
-
-
 public static class SongRecommendationRequest
 {
     private static readonly string RequestUrl = "https://api.spotify.com/v1/recommendations?";

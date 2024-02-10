@@ -18,7 +18,7 @@ namespace MinimalSongRecApi.Utilities
     // Only to be instantiated with JSON deserialization
     public class SongRecommendationResponse
     {
-        public List<SimpleTrack> Tracks { get; set; }
+        public List<FullTrack> Tracks { get; set; }
         public List<RecommendationSeed> Seeds { get; set; }
     }
 
