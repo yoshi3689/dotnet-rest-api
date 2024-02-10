@@ -41,7 +41,7 @@ public class SpotifyAuthController : ControllerBase
     [HttpGet("login")]
     public IActionResult Login()
     {
-        _logger.LogInformation(SpotifyClientService.CLIENT_URL);
+        _logger.LogInformation(SpotifyClientService.ClientUrl);
         var (verifier, challenge) = PKCEUtil.GenerateCodes();
         
         // Store the verifier in a secure manner (e.g., session) for later use
@@ -69,7 +69,7 @@ public class SpotifyAuthController : ControllerBase
         HttpContext.Session.SetString(TokenRetrieve, token);
         
         // redirect the client to the homepage
-        return RedirectPermanent($"{SpotifyClientService.CLIENT_URL}?login=true");
+        return RedirectPermanent($"{SpotifyClientService.ClientUrl}?login=true");
     }
 
     /// <summary>
@@ -128,12 +128,34 @@ public class SpotifyAuthController : ControllerBase
             );
             
             // TODO: save the added tracks to a database
-            return Ok("created playlist with items added");
+            return Ok(new { mesage = "created playlist with items added" });
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             return BadRequest("Error in creating/adding to a playlist ");
+        }
+    }
+    
+    /// <summary>
+    /// in logging out, clear information in a session
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("logout")]
+    public IActionResult Logout()
+    { 
+        _logger.LogInformation("logout");
+        try
+        {
+            HttpContext.Session.Remove(TokenRetrieve);
+            HttpContext.Session.Remove(VerifierRetrieve);
+            // var publicProfile = await client.Personalization.get;
+            return Ok(new { message = "cookies cleared. logout successful" });
+        }
+        catch (Exception e)
+        {
+            _logger.LogInformation(e.Message);
+            return BadRequest("Error in logging out.");
         }
     }
 

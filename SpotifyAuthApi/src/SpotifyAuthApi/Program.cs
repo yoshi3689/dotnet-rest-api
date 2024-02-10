@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     "http://localhost:3000", 
-                    "replacedByDomainName.com") // note the port is included 
+                    "https://grooveguru.xyz") // note the port is included 
                 .AllowAnyHeader()
                 .AllowCredentials()
                 .AllowAnyMethod();

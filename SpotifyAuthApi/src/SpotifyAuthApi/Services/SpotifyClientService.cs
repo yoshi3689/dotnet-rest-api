@@ -4,9 +4,9 @@ namespace SpotifyAuthApi.Services;
 
 public class SpotifyClientService : ISpotifyClientService
 {
-    private static String CLIENT_ID = Environment.GetEnvironmentVariable("CLIENT_ID");
-    private static Uri CALLBACK_URI = new Uri(Environment.GetEnvironmentVariable("CALLBACK_URI_DEV"));
-    public static String CLIENT_URL = Environment.GetEnvironmentVariable("CLIENT_URL");
+    private static readonly String ClientId = Environment.GetEnvironmentVariable("CLIENT_ID");
+    private static readonly Uri CallbackUri = new Uri(Environment.GetEnvironmentVariable("CALLBACK_URI_DEV"));
+    public static readonly String ClientUrl = Environment.GetEnvironmentVariable("CLIENT_URL");
     
     public SpotifyClient GetSpotifyClient(string accessToken)
     {
@@ -17,8 +17,8 @@ public class SpotifyClientService : ISpotifyClientService
     {
         // Make sure  is in your applications redirect URIs!
         var loginRequest = new LoginRequest(
-            CALLBACK_URI,
-            CLIENT_ID,
+            CallbackUri,
+            ClientId,
             LoginRequest.ResponseType.Code
         )
         {
@@ -40,7 +40,7 @@ public class SpotifyClientService : ISpotifyClientService
     public async Task<string> HandleCallback(string code, string verifier)
     {
         var tokenResponse = await new OAuthClient().RequestToken(
-            new PKCETokenRequest(CLIENT_ID, code, CALLBACK_URI, verifier)
+            new PKCETokenRequest(ClientId, code, CallbackUri, verifier)
         );
         
         return tokenResponse.AccessToken;
