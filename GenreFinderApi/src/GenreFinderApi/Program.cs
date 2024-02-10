@@ -1,4 +1,5 @@
 using System.Reflection;
+using GenreFinderApi.Services;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +21,7 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     "http://localhost:3000", 
-                    "replacedByDomainName.com") // note the port is included 
+                    "https://grooveguru.xyz") // note the port is included 
                 .AllowAnyHeader()
                 .AllowCredentials()
                 .AllowAnyMethod();
@@ -36,14 +37,10 @@ builder.Services.AddCookiePolicy(options =>
     // This lambda determines whether user consent for non-essential cookies is needed for a given request.
     options.MinimumSameSitePolicy = SameSiteMode.None;
 });
-builder.Services.AddSession(options =>
-{
-    // Set appropriate options, if needed
-    options.IdleTimeout = TimeSpan.FromMinutes(20);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
 
+// Add services to the container.
+builder.Services.AddSingleton<GenrePromptGenerator>();
+builder.Services.AddHttpClient();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -66,10 +63,9 @@ app.UseCors("MyAllowedOrigins");
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
-// Use sessions
-app.UseSession();
+
 app.MapControllers();
 
-app.MapGet("/", () => "Welcome to running ASP.NET Core Minimal API on AWS Lambda");
+app.MapGet("/", () => "This is genre finder api");
 
 app.Run();

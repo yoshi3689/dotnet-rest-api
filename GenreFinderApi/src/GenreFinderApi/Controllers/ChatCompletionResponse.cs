@@ -1,19 +1,19 @@
 namespace GenreFinderApi.Controllers;
 
-public interface IChatCompletionsResponse
+public class IChatCompletionsResponse
 {
-    List<Choice> Choices { get; set; }
-    string Model { get; set; }
+    public List<Choice> choices { get; set; }
+    string model { get; set; }
 }
 
 public class Choice
 {
-    public string FinishReason { get; set; }
-    public Message Message { get; set; }
+    public string finishReason { get; set; }
+    public Message message { get; set; }
 }
 
 public class Message
 {
-    public string Role { get; set; }
-    public string Content { get; set; }
+    public string role { get; set; }
+    public string content { get; set; }
 }
