@@ -28,6 +28,7 @@ public class SpotifyAuthController : ControllerBase
     private readonly ISpotifyClientService _spotifyClientService;
     private const string TokenRetrieve = "UserAccessToken";
     private const string VerifierRetrieve = "SpotifyVerifier";
+    private const string RedirectUrl = "RedirectUrl";
 
     public SpotifyAuthController(
         ISpotifyClientService spotifyClientService, 
@@ -41,14 +42,14 @@ public class SpotifyAuthController : ControllerBase
     [HttpGet("login")]
     public IActionResult Login()
     {
-        _logger.LogInformation(SpotifyClientService.ClientUrl);
+        var refererUrl = Request.Headers["Referer"].ToString();
+        HttpContext.Session.SetString(RedirectUrl, refererUrl);
+        
         var (verifier, challenge) = PKCEUtil.GenerateCodes();
         
         // Store the verifier in a secure manner (e.g., session) for later use
         HttpContext.Session.SetString(VerifierRetrieve, verifier);
         string uri = _spotifyClientService.HandleLogin(challenge);
-        
-        Console.WriteLine("This is session id in login: " + HttpContext.Session.Id);
         
         // Redirect user to the Spotify login URI
         return Redirect(uri);
@@ -67,9 +68,10 @@ public class SpotifyAuthController : ControllerBase
         
         // Store the access token in session
         HttpContext.Session.SetString(TokenRetrieve, token);
+        var url = HttpContext.Session.GetString(RedirectUrl);
         
         // redirect the client to the homepage
-        return RedirectPermanent($"{SpotifyClientService.ClientUrl}?login=true");
+        return RedirectPermanent($"{url}?login=true");
     }
 
     /// <summary>
@@ -79,10 +81,9 @@ public class SpotifyAuthController : ControllerBase
     [HttpGet("user")]
     public async Task<IActionResult> GetUserProfile()
     { 
-        _logger.LogInformation("user profile");
-        SpotifyClient client = CreateClient();
         try
         {
+            SpotifyClient client = CreateClient();
             var profile = await client.UserProfile.Current();
             // var publicProfile = await client.Personalization.get;
             return Ok(profile);
