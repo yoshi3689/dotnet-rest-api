@@ -1,5 +1,7 @@
 var builder = WebApplication.CreateBuilder(args);
 
+DotNetEnv.Env.Load();
+
 builder.Services.AddCors(options =>
 {
 options.AddPolicy("MyAllowedOrigins",
