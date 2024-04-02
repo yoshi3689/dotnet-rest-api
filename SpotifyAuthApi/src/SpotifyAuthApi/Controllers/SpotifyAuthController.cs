@@ -5,20 +5,49 @@ using SpotifyAuthApi.Services;
 
 namespace SpotifyAuthApi.Controllers;
 
-public class PlaylistCreate
+/// <summary>
+/// request body necessary for spotify playlist update/create
+/// </summary>
+public class User
 {
-    public string Name { get; }
-
-    public bool? Public { get; set; }
-    
-    public string? Description { get; set; }
-
-    // Assuming uris is an array of strings
-    public string[] Uris { get; }
-        
-    public string UserId { get; }
+    public PrivateUser Profile;
+    public List<PlayHistoryItem> RecentItems;
 }
 
+/// <summary>
+/// request body necessary for spotify playlist update/create
+/// </summary>
+public class PlaylistCreate
+{
+    /// <summary>
+    /// name of paylist
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
+    /// playlist's visibility
+    /// </summary>
+    public bool? Public { get; set; }
+    
+    /// <summary>
+    /// playlist's description
+    /// </summary>
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// tracks' uris to be included in the playlis
+    /// </summary>
+    public string[]? Uris { get; set;}
+        
+    /// <summary>
+    /// spotify user id
+    /// </summary>
+    public string? UserId { get; set;}
+}
+
+/// <summary>
+/// spotify oauth and auth-required method handler
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class SpotifyAuthController : ControllerBase
@@ -30,6 +59,11 @@ public class SpotifyAuthController : ControllerBase
     private const string VerifierRetrieve = "SpotifyVerifier";
     private const string RedirectUrl = "RedirectUrl";
 
+    /// <summary>
+    /// controller constructor
+    /// </summary>
+    /// <param name="spotifyClientService">custom singleton registered in Program.cs</param>
+    /// <param name="logger">default logger</param>
     public SpotifyAuthController(
         ISpotifyClientService spotifyClientService, 
         ILogger<SpotifyAuthController> logger
@@ -38,16 +72,22 @@ public class SpotifyAuthController : ControllerBase
         _logger = logger;
     }
 
-    // Generates a secure random verifier of length 100 and its challenge
+    /// <summary>
+    /// handle login request from a frontend
+    /// </summary>
+    /// <returns>callback uri</returns>
     [HttpGet("login")]
     public IActionResult Login()
     {
+        _logger.LogInformation("login");
+        // set the request origin to redirect the user to the frontend app 
         var refererUrl = Request.Headers["Referer"].ToString();
         HttpContext.Session.SetString(RedirectUrl, refererUrl);
         
+        // one of the spotify auth methods
         var (verifier, challenge) = PKCEUtil.GenerateCodes();
         
-        // Store the verifier in a secure manner (e.g., session) for later use
+        // Store the verifier (e.g., session) for later use
         HttpContext.Session.SetString(VerifierRetrieve, verifier);
         string uri = _spotifyClientService.HandleLogin(challenge);
         
@@ -56,37 +96,47 @@ public class SpotifyAuthController : ControllerBase
     }
 
 
+    /// <summary>
+    /// handle the callback request invocation
+    /// </summary>
+    /// <param name="code">code challenge</param>
+    /// <returns></returns>
     [HttpGet("callback")]
-    public async Task<IActionResult> GetCallback([FromQuery] string code, [FromQuery] string? state)
+    public async Task<IActionResult> GetCallback([FromQuery] string code)
     {
-        // Retrieve the stored verifier based on the provided state (e.g., from session)
+        // Retrieve necessary values from session
         var verifier = HttpContext.Session.GetString(VerifierRetrieve);
+        if (verifier == null) return StatusCode(500, "verifier is not restored from storage");
+        var url = HttpContext.Session.GetString(RedirectUrl);
+        if (url == null) return StatusCode(500, "redirect url is not restored from storage");
         
         // Exchange the authorization code for an access token
-        if (verifier == null) return BadRequest("verifier is missing");
         var token = await _spotifyClientService.HandleCallback(code, verifier);
-        
-        // Store the access token in session
         HttpContext.Session.SetString(TokenRetrieve, token);
-        var url = HttpContext.Session.GetString(RedirectUrl);
         
         // redirect the client to the homepage
         return RedirectPermanent($"{url}?login=true");
     }
 
     /// <summary>
-    /// get user's profile
+    /// handle request for user profile fetch
     /// </summary>
-    /// <returns></returns>
+    /// <returns>user profile</returns>
     [HttpGet("user")]
     public async Task<IActionResult> GetUserProfile()
     { 
+        _logger.LogInformation("profile");
         try
         {
             SpotifyClient client = CreateClient();
             var profile = await client.UserProfile.Current();
+            var recentlyPlayedTracks = await client.Player.GetRecentlyPlayed();
+            var u = new User();
+            u.Profile = profile;
+            u.RecentItems = recentlyPlayedTracks.Items;
+            // recentlyPlayedTracks.Items
             // var publicProfile = await client.Personalization.get;
-            return Ok(profile);
+            return Ok(u);
         }
         catch (Exception e)
         {
@@ -104,6 +154,7 @@ public class SpotifyAuthController : ControllerBase
     [HttpPost("playlist/create")]
     public async Task<IActionResult> CreateNewPlaylist([FromBody] PlaylistCreate pl)
     {
+        _logger.LogInformation(pl.Name);
         try
         {
             var noNull = AreAllPropertiesNonNull(pl);
@@ -114,7 +165,7 @@ public class SpotifyAuthController : ControllerBase
             // create playlist
             var plCreateRequest = new PlaylistCreateRequest(pl.Name);
             plCreateRequest.Description = pl.Description;
-            plCreateRequest.Public = pl.Public;
+            plCreateRequest.Public = true;
             
             var plCreationRes = await client.Playlists.Create(
                 pl.UserId, 
@@ -128,20 +179,19 @@ public class SpotifyAuthController : ControllerBase
                 new PlaylistAddItemsRequest(pl.Uris)
             );
             
-            // TODO: save the added tracks to a database
             return Ok(new { mesage = "created playlist with items added" });
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return BadRequest("Error in creating/adding to a playlist ");
+            return StatusCode(500, pl);
         }
     }
     
     /// <summary>
-    /// in logging out, clear information in a session
+    /// clears information in a session
     /// </summary>
-    /// <returns></returns>
+    /// <returns>logout status message</returns>
     [HttpGet("logout")]
     public IActionResult Logout()
     { 
@@ -167,6 +217,7 @@ public class SpotifyAuthController : ControllerBase
     /// <exception cref="Exception">when an access token does not exist in the session object</exception>
     private SpotifyClient CreateClient()
     {
+        // _logger.LogInformation(HttpContext.Session.Id);
         var accessToken = HttpContext.Session.GetString(TokenRetrieve);
         if (accessToken == null) throw new Exception("access token invalid. check if it's not expired");
         return new SpotifyClient(accessToken);

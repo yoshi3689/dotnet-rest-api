@@ -37,16 +37,16 @@ namespace GenreFinderApi.Controllers
         [HttpPost("genres/find")]
         public async Task<IActionResult> FetchChatCompletions([FromBody] string[] artists)
         {
-            _logger.LogInformation(artists[0]);
+            // _logger.LogInformation(artists[0]);
             try
             {
                 // Generate prompt using the provided artists
                 string prompt = _promptGenerator.GenerateChatCompletionPrompt(artists);
-                _logger.LogInformation(prompt);
-                foreach (var artist in artists)
-                {
-                    _logger.LogInformation(artist);
-                }
+                // _logger.LogInformation(prompt);
+                // foreach (var artist in artists)
+                // {
+                //     _logger.LogInformation(artist);
+                // }
                 
                 // Prepare the request body
                 var requestBody = new
@@ -74,7 +74,7 @@ namespace GenreFinderApi.Controllers
                 // Add authorization header
                 var key = Environment.GetEnvironmentVariable("OPEN_AI_API_KEY");
                 request.Headers.Add("Authorization", $"Bearer {key}");
-                _logger.LogInformation(Environment.GetEnvironmentVariable("OPEN_AI_API_KEY"));
+                // _logger.LogInformation(Environment.GetEnvironmentVariable("OPEN_AI_API_KEY"));
                 // Send the HTTP request
                 var response = await _httpClient.SendAsync(request);
 

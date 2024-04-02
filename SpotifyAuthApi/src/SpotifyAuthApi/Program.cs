@@ -48,7 +48,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = 0;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    if (!isDev) options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 
