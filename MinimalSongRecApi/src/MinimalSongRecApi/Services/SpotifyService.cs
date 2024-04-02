@@ -14,8 +14,6 @@ public class SpotifyService
     private static readonly string CLIENT_SECRET = Environment.GetEnvironmentVariable("CLIENT_SECRET");
     private static string _accessToken = "";
     
-    
-
     private SpotifyService(SpotifyClient client)
     {
         _spotify = client;
